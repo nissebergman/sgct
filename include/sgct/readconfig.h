@@ -14,9 +14,11 @@
 
 namespace sgct {
 
-[[nodiscard]] config::Cluster readConfig(const std::string& filename);
+[[nodiscard]] config::Cluster readConfig(const std::string& filename,
+    bool preview = false);
 
-[[nodiscard]] config::Cluster readJsonConfig(const std::string& configuration);
+[[nodiscard]] config::Cluster readJsonConfig(const std::string& configuration,
+    bool preview = false);
 
 [[nodiscard]] std::string serializeConfig(const config::Cluster& cluster);
 

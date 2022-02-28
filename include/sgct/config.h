@@ -345,6 +345,8 @@ struct Cluster {
     std::optional<Capture> capture;
     std::vector<Tracker> trackers;
     std::optional<Settings> settings;
+    int version = 1;
+    std::optional<int> configGeneratorVersion;
 };
 void validateCluster(const Cluster& cluster);
 

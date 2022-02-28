@@ -2249,6 +2249,9 @@ void from_json(const nlohmann::json& j, Cluster& c) {
 
     parseValue(j, "trackers", c.trackers);
     parseValue(j, "nodes", c.nodes);
+
+    parseValue(j, "version", c.version);
+    parseValue(j, "configGeneratorVersion", c.configGeneratorVersion);
 }
 
 void to_json(nlohmann::json& j, const Cluster& c) {
@@ -2293,13 +2296,19 @@ void to_json(nlohmann::json& j, const Cluster& c) {
     if (!c.nodes.empty()) {
         j["nodes"] = c.nodes;
     }
+
+    j["version"] = c.version;
+
+    if (c.configGeneratorVersion.has_value()) {
+        j["configGeneratorVersion"] = *c.configGeneratorVersion;
+    }
 }
 
 } // namespace sgct::config
 
 namespace sgct {
 
-config::Cluster readConfig(const std::string& filename) {
+config::Cluster readConfig(const std::string& filename, bool preview) {
     Log::Debug(fmt::format("Parsing XML config '{}'", filename));
     if (filename.empty()) {
         throw Err(6080, "No configuration file provided");
@@ -2321,7 +2330,7 @@ config::Cluster readConfig(const std::string& filename) {
     }
 
     // Then load the cluster
-    config::Cluster cluster = [](std::filesystem::path path) {
+    config::Cluster cluster = [preview](std::filesystem::path path) {
         if (path.extension() == ".xml") {
             return xmlconfig::readXMLFile(path);
         }
@@ -2332,7 +2341,7 @@ config::Cluster readConfig(const std::string& filename) {
                     (std::istreambuf_iterator<char>(f)),
                     std::istreambuf_iterator<char>()
                 );
-                return readJsonConfig(contents);
+                return readJsonConfig(contents, preview);
             }
             catch (const nlohmann::json::exception& e) {
                 throw Err(6082, e.what());
@@ -2362,23 +2371,26 @@ config::Cluster readConfig(const std::string& filename) {
     return cluster;
 }
 
-sgct::config::Cluster readJsonConfig(const std::string& configuration) {
+sgct::config::Cluster readJsonConfig(const std::string& configuration, bool preview) {
     nlohmann::json j = nlohmann::json::parse(configuration);
 
     auto it = j.find("version");
-    if (it == j.end()) {
+    if (it == j.end() && !preview) {
         throw std::runtime_error("Missing 'version' information");
     }
-
     sgct::config::Cluster cluster;
-    from_json(j, cluster);
-    cluster.success = true;
+    if (preview) {
+        parseValue(j, "configGeneratorVersion", cluster.configGeneratorVersion);
+    }
+    else {
+        from_json(j, cluster);
+        cluster.success = true;
+    }
     return cluster;
 }
 
 std::string serializeConfig(const config::Cluster& cluster) {
     nlohmann::json res;
-    res["version"] = 1;
     to_json(res, cluster);
     return res.dump(2);
 }
