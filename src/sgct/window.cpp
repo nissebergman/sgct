@@ -770,7 +770,7 @@ void Window::openWindow(GLFWwindow* share, bool isLastWindow) {
 
         const int antiAliasingSamples = numberOfAASamples();
         glfwWindowHint(GLFW_SAMPLES, antiAliasingSamples > 1 ? antiAliasingSamples : 0);
-        
+
         glfwWindowHint(GLFW_AUTO_ICONIFY, _shouldAutoiconify ? GLFW_TRUE : GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, _isFloating ? GLFW_TRUE : GLFW_FALSE);
         glfwWindowHint(GLFW_DOUBLEBUFFER, _isDoubleBuffered ? GLFW_TRUE : GLFW_FALSE);
@@ -823,6 +823,7 @@ void Window::openWindow(GLFWwindow* share, bool isLastWindow) {
     {
         ZoneScopedN("glfwCreateWindow")
         _windowHandle = glfwCreateWindow(_windowRes.x, _windowRes.y, "SGCT", mon, share);
+        glfwSetWindowUserPointer(_windowHandle, this);
         if (_windowHandle == nullptr) {
             throw Err(8000, "Error opening GLFW window");
         }
